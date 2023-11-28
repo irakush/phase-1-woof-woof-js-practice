@@ -1,98 +1,78 @@
-const dogBar = getDocumentElement('#dog-bar');
-const dogInfo = getDocumentElement('#dog-info')
-
-// createDogSection()
-
 const url = 'http://localhost:3000/pups'
+const dogList = document.querySelector('#dog-bar')
+const dogInfo = document.querySelector('#dog-info')
+const offAndOn = document.querySelector('#good-dog-filter')
 
-let copyDogsObj = {}
-let singleDog = {}
+fetch(url)
+.then(res => res.json())
+.then(dogData => {
+  dogInHandle(dogData)
+  filterGoodDog(dogData)
+})
 
-const hendleDogBark = () => {
-  fetch(url)
-  .then(res => res.json())
-  .then(createDogsMenu)
-}
-
-function createDogsMenu(dogs) {
-  console.log(dogs)
-  copyDogsObj = dogs
-  dogs.forEach(renderDogMenuCard)
-}
-
-function renderDogMenuCard(dog){
-  const dogCard = createElement('span')
-  dogCard.textContent = dog.name
-
-  dogCard.addEventListener('click', e => {
-    showDogInfo(dog)
-  })
-
-  dogBar.append(dogCard)
-}
-
-function showDogInfo(dog) {
-  singleDog = dog
-
-  console.log('dasdasafafds')
-
-  const dogForm = getDocumentElement('#dog_details_form')
-
-  !dogForm ? createDogSection() : false
-  
-  const dogName = getDocumentElement('#dog_name')
-  const dogImage = getDocumentElement('#dog_image_url')
-  const dogStatusButton = getDocumentElement('#dog_status')
-
-  dogName.textContent = dog.name
-  dogImage.src = dog.image
-  dogStatusButton.textContent = dog.isGoodDog ? "Good Dog!" : "Bad Dog!"
-}
-
-function changeDogStatus() {
-  console.log(' changeDogStatus ', copyDogsObj)
- 
-  singleDog.isGoodDog = singleDog.isGoodDog ? false : true
-
-  copyDogsObj = copyDogsObj.map(copyDog => {
-    if (singleDog.id === copyDog.id) {
-      return singleDog
+function filterGoodDog(dogData){
+  offAndOn.addEventListener('click', () => {
+    // filter for good dogs
+    goodDogsArr = dogData.filter(dog => {
+      return dog.isGoodDog 
+    })
+    // Change button text and update the menu bar
+    if (offAndOn.innerText.includes("OFF")) {
+      offAndOn.innerText="Filter good dogs: ON"
+      dogInHandle(goodDogsArr)brannch -d 
     } else {
-      return copyDog
+      offAndOn.innerText="Filter good dogs: OFF"
+      dogInHandle(dogData)
     }
-  });
-
-  console.log(' dog status was changed ', copyDogsObj)
-  showDogInfo(singleDog)
-}
-
-function createDogSection() {
-  const dogDetailsSection = createElement('section')
-
-  dogDetailsSection.innerHTML = `
-    <form id='dog_details_form'>
-      <img id="dog_image_url" alt="Here should be a dog image" />
-      <h2 id="dog_name"></h2>
-      <button id="dog_status"></button>
-    </form>
-  `
-  dogInfo.append(dogDetailsSection)
-  hendleDogStatusButton()
-}
-
-const hendleDogStatusButton = () => {
-  getDocumentElement('#dog_status').addEventListener('click', e => {
-    e.preventDefault()
-    changeDogStatus()
   })
 }
 
-function getDocumentElement(el){
-  return document.querySelector(el);
+function dogInHandle(dogData){
+  dogList.innerHTML = ""
+  dogData.forEach(oneDog => {
+    const dogListItem = document.createElement('span')
+
+    dogListItem.textContent = oneDog.name
+    dogList.append(dogListItem)
+    dogListItem.addEventListener('click', () => {
+      showDetails(oneDog)
+    })
+  })
 }
 
-function createElement(el){
-  return document.createElement(el)
+function showDetails(dog) {
+  dogInfo.innerHTML = ""
+
+  const dogImg = document.createElement('img')
+  const dogName = document.createElement('h2')
+  const dogStatus = document.createElement('button')
+
+  dogImg.src = dog.image
+  dogName.textContent = dog.name
+  dogStatus.textContent = dog.isGoodDog ? "Good Dog!" : "Bad Dog!"
+
+  dogInfo.append(dogImg, dogName, dogStatus)
+
+  dogStatus.addEventListener('click', () => {
+    dog.isGoodDog = !dog.isGoodDog
+
+    let updatingData = { isGoodDog: dog.isGoodDog }
+
+    patchDog(dog.id, updatingData)
+      // .then(updatedDog => console.log(updatedDog))
+      .then(updatedDog => {
+        dogStatus.textContent = updatedDog.isGoodDog ? "Good Dog!" : "Bad Dog!"
+      })
+  })
 }
 
-hendleDogBark()
+function patchDog(urlId, updatingData) {
+  return fetch(url + '/' + urlId, {
+    method: "PATCH",
+    headers: {
+      "Content-type": "application/json"
+    },
+    body: JSON.stringify(updatingData)
+  })
+  .then(res => res.json())
+}
