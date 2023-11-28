@@ -19,7 +19,7 @@ function filterGoodDog(dogData){
     // Change button text and update the menu bar
     if (offAndOn.innerText.includes("OFF")) {
       offAndOn.innerText="Filter good dogs: ON"
-      dogInHandle(goodDogsArr)brannch -d 
+      dogInHandle(goodDogsArr)
     } else {
       offAndOn.innerText="Filter good dogs: OFF"
       dogInHandle(dogData)
